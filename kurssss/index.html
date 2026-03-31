@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoVis - Advanced</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+    <body>
+
+        <!-- ЛЕВАЯ ПАНЕЛЬ -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span>&lt;/&gt;</span> AlgoVis
+            </div>
+
+            <!-- 1. Сортировка -->
+            <div class="control-group">
+                <div class="control-label">Алгоритм</div>
+                <select id="algo-select">
+                    <option value="bubble">Пузырьковая (Bubble)</option>
+                    <option value="insertion">Вставками (Insertion)</option>
+                    <option value="selection">Выбором (Selection)</option>
+                </select>
+            </div>
+
+            <!-- 2. Заполнение -->
+            <div class="control-group">
+                <div class="control-label">Данные</div>
+                <select id="fill-mode">
+                    <option value="random">Случайные числа</option>
+                    <option value="manual">Ввод вручную</option>
+                </select>
+
+                <!-- Инпут для ручного ввода -->
+                <div id="manual-input-box" style="display: none;">
+                    <input type="text" id="manual-data" placeholder="10, 50, 23, 90...">
+                    <div style="font-size: 0.7rem; color: #6b7280; margin-top: 4px;">Через запятую</div>
+                    <button class="primary" id="apply-manual" style="margin-top: 8px; font-size: 0.8rem;">Применить</button>
+                </div>
+
+                <!-- Слайдер размера (для рандома) -->
+                <div id="size-control-box">
+                    <div class="toggle-row" style="margin-top:5px;">
+                        <div class="control-label">Кол-во блоков</div>
+                        <span id="size-val" style="font-size: 0.8rem; color: white;">20</span>
+                    </div>
+                    <input type="range" id="array-size" min="5" max="50" value="20">
+                    <button class="primary" id="generate-btn">↻ Сгенерировать</button>
+                </div>
+            </div>
+
+            <!-- 3. Настройки анимации -->
+            <div class="control-group">
+                <div class="control-label">Режим просмотра</div>
+
+                <div class="toggle-row">
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">Пошагово</span>
+                    <label class="switch">
+                        <input type="checkbox" id="step-mode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="control-label" style="margin-top:15px;">Скорость</div>
+                <!-- Инверсия: слева быстро (мало мс), справа медленно -->
+                <input type="range" id="speed" min="10" max="1000" value="200" style="direction: rtl">
+            </div>
+        </aside>
+
+        <!-- ОСНОВНОЙ ЭКРАН -->
+        <main class="main-content">
+            <!-- Статистика -->
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <h4>Сложность</h4>
+                    <span id="complexity-display">O(N²)</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Сравнений</h4>
+                    <span id="comparisons-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Перестановок</h4>
+                    <span id="swaps-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Статус</h4>
+                    <span id="status-display">Ожидание</span>
+                </div>
+            </div>
+
+            <!-- Визуализация -->
+            <div class="vis-container" id="container">
+                <!-- Блоки будут здесь -->
+            </div>
+
+            <!-- Кнопки управления -->
+            <div class="footer-controls">
+                <button class="control-btn" id="next-step-btn" title="Сделать шаг" disabled>⏭</button>
+                <button class="control-btn" id="start-btn" title="Запуск/Пауза" style="background: white; color: rgb(0, 0, 0); border:none;">▶</button>
+            </div>
+        </main>
+        <script src="js/js.js"></script>
+    </body>
+</html>
+
+<!--
+python -m http.server
+http://localhost:8000/
+-->
+
