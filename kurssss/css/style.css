@@ -218,7 +218,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 #status-display { color: var(--color-bar); }
 
 /* Visualizer Area */
-.vis-container {
+.vis-container1 {
     flex-grow: 1;
     background: #151a24;
     border-radius: 12px;
@@ -285,3 +285,38 @@ input:checked + .slider:before { transform: translateX(20px); }
     cursor: pointer;
 }
 .control-btn:hover { background: var(--border-color); }
+
+/* Контейнер для панелей */
+#vis-container2 {
+    flex-grow: 1;
+    background: #151a24;
+    border-radius: 12px;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 40px 20px 20px 20px;
+    margin: 10px 0px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+/* Стили панелей */
+.stats-bar2 {
+    min-width: 0;
+    opacity: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    background-color: var(--bg-sidebar);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+
+#vis-container2.split-mode .view-panel {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}

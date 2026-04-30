@@ -1,0 +1,19 @@
+{
+  "bubble": {
+    "name": "Пузырьковая сортировка",
+    "complexity": "O(N)"
+  },
+  "insertion": {
+    "name": "Сортировка вставками",
+    "complexity": "O(N²)"
+  },
+  "quick_sort": {
+    "name": "Быстрая сортировка (Quick)",
+    "complexity": "O(N log N)"
+  },
+  "merge_sort": {
+    "name": "Сортировка слиянием",
+    "complexity": "O(N log N)"
+  }
+
+}

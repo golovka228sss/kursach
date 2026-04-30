@@ -1,175 +1,266 @@
-// ПЕРЕМЕННЫЕ
-const container = document.getElementById('container');
+// --- ПЕРЕМЕННЫЕ ИНТЕРФЕЙСА ---
 const sizeInput = document.getElementById('array-size');
 const sizeVal = document.getElementById('size-val');
 const speedInput = document.getElementById('speed');
-const algoSelect = document.getElementById('algo-select');
 const fillMode = document.getElementById('fill-mode');
 const manualInputBox = document.getElementById('manual-input-box');
 const sizeControlBox = document.getElementById('size-control-box');
-const manualDataInput = document.getElementById('manual-data');
-const applyManualBtn = document.getElementById('apply-manual');
 const generateBtn = document.getElementById('generate-btn');
 const startBtn = document.getElementById('start-btn');
 const nextStepBtn = document.getElementById('next-step-btn');
 const stepModeCheck = document.getElementById('step-mode');
 
-// Статистика
-const compDisplay = document.getElementById('comparisons-display');
-const swapDisplay = document.getElementById('swaps-display');
-const statusDisplay = document.getElementById('status-display');
+const toggleBtn = document.getElementById('toggle-split');
+const wrapper = document.getElementById('vis-container2');
+const panel2 = document.getElementById('panel-2');
+const settings2 = document.getElementById('settings-view-2');
+
+const algoSelect = document.getElementById('algo-select');
+const algoSelect2 = document.getElementById('algo-select-2');
 const complexityDisplay = document.getElementById('complexity-display');
+const complexityDisplay2 = document.getElementById('complexity-display-2');
 
-let array = [];
-let isSorting = false;
-let stepResolver = null; // Промис для шага
+// --- СОСТОЯНИЕ ПРИЛОЖЕНИЯ ---
+let algoData = {};
+let stepResolver = null;
 
-const complexities = {
-    bubble: "O(N²)",
-    insertion: "O(N²)",
-    selection: "O(N²)"
+const state1 = {
+    id: 's1',
+    array: [],
+    frames: [],
+    currentFrameIndex: 0,
+    isSorting: false,
+    comparisons: 0,
+    updates: 0,
+    container: document.getElementById('container'),
+    compDisplay: document.getElementById('comparisons-display'),
+    swapDisplay: document.getElementById('swaps-display'),
+    statusDisplay: document.getElementById('status-display')
 };
 
-// ИНИЦИАЛИЗАЦИЯ
-window.onload = generateArray;
-
-// СОБЫТИЯ
-
-// Изменение размера слайдера
-sizeInput.oninput = function() {
-    sizeVal.innerText = this.value;
-    if (fillMode.value === 'random') generateArray();
+const state2 = {
+    id: 's2',
+    array: [],
+    frames: [],
+    currentFrameIndex: 0,
+    isSorting: false,
+    comparisons: 0,
+    updates: 0,
+    container: document.getElementById('container-2'),
+    compDisplay: document.getElementById('comparisons-display-2'),
+    swapDisplay: document.getElementById('swaps-display-2'),
+    statusDisplay: document.getElementById('status-display-2')
 };
 
-// Переключение режима ввода (Рандом / Вручную)
-fillMode.onchange = function() {
-    if (this.value === 'manual') {
-        manualInputBox.style.display = 'block';
-        sizeControlBox.style.display = 'none';
-    } else {
-        manualInputBox.style.display = 'none';
-        sizeControlBox.style.display = 'block';
-        generateArray();
+// --- ИНИЦИАЛИЗАЦИЯ ---
+window.onload = async () => {
+    await loadAlgorithms();
+    generateArray1();
+    generateArray2();
+};
+
+// --- ЗАГРУЗКА АЛГОРИТМОВ ---
+async function loadAlgorithms() {
+    try {
+        const response = await fetch('./sort.json');
+        algoData = await response.json();
+        
+        [algoSelect, algoSelect2].forEach(select => {
+            select.innerHTML = '';
+            Object.keys(algoData).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = algoData[key].name || key;
+                select.appendChild(option);
+            });
+        });
+        updateAlgoInfo(state1, algoSelect, complexityDisplay);
+        updateAlgoInfo(state2, algoSelect2, complexityDisplay2);
+    } catch (err) {
+        console.error("Ошибка загрузки sort.json:", err);
     }
-};
+}
 
-// Кнопка применения ручного ввода
-applyManualBtn.onclick = function() {
-    const text = manualDataInput.value;
-    const nums = text.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    if (nums.length > 1) {
-        //ограничим кол-во.
-        array = nums.slice(0, 40);
-        renderArray();
-        resetStats();
-    } else {
-        alert("Введите минимум 2 числа через запятую.");
+function updateAlgoInfo(state, select, display) {
+    const data = algoData[select.value];
+    if (data) {
+        display.innerText = data.complexity || "O(N²)";
+        state.statusDisplay.innerText = "Готов";
     }
-};
-
-
-algoSelect.onchange = function() {
-    complexityDisplay.innerText = complexities[this.value];
-    resetStats();
-};
-
-
-// ФУНКЦИИ
-
-function updateControls() {
-    sizeInput.disabled = isSorting;
-    generateBtn.disabled = isSorting;
-    fillMode.disabled = isSorting;
-    startBtn.disabled = isSorting;
-    startBtn.style.opacity = isSorting ? "0.5" : "1";
-    
-    // Кнопка шага активна только если идет сортировка И включен пошаговый режим
-    nextStepBtn.disabled = !(isSorting && stepModeCheck.checked);
 }
 
-function resetStats() {
-    compDisplay.innerText = "0";
-    swapDisplay.innerText = "0";
-    statusDisplay.innerText = "Ожидание";
-    statusDisplay.style.color = "var(--text-main)";
+// --- УПРАВЛЕНИЕ ДАННЫМИ ---
+async function loadData(state, dataFile) {
+    if (state.isSorting) return;
+    try {
+        const [arrayRes, dataRes] = await Promise.all([
+            fetch("array.json").then(res => res.json()),
+            fetch(dataFile).then(res => res.json())
+        ]);
+
+        state.array = [...arrayRes.metadata.initial_array];
+        state.frames = dataRes.frames || [];
+        
+        if (state === state1) {
+            sizeInput.value = state.array.length;
+            sizeVal.innerText = state.array.length;
+        }
+
+        renderArray(state);
+        resetStats(state);
+    } catch (err) {
+        console.error(`Ошибка загрузки ${dataFile}:`, err);
+    }
 }
 
-function generateArray() {
-    if (isSorting) return;
+const generateArray1 = () => loadData(state1, "data1.json");
+const generateArray2 = () => loadData(state2, "data2.json");
 
-    // Загружаем JSON
-    fetch("data.json")
-        .then(res => res.json())
-        .then(jsonData => {
-            if (!jsonData || !jsonData.metadata || !Array.isArray(jsonData.metadata.initial_array)) {
-                console.error("Некорректный формат JSON");
-                return;
-            }
-
-            // Берём массив из JSON
-            array = [...jsonData.metadata.initial_array];
-
-            // Рендерим
-            renderArray();
-            resetStats();
-        })
-        .catch(err => console.error("Ошибка загрузки JSON:", err));
-}
-
-function renderArray() {
-    container.innerHTML = '';
-    // Найдем макс значение для расчета высоты в %
-    const maxVal = Math.max(...array, 10); 
-
-    array.forEach((val, idx) => {
+function renderArray(state) {
+    state.container.innerHTML = '';
+    const maxVal = Math.max(...state.array, 10);
+    state.array.forEach((val, idx) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'bar-wrapper';
-        
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.id = `bar-${idx}`;
-        // Высота = (значение / макс) * 50
-        bar.style.height = `${(val / maxVal) * 50}%`;
-        
-        const label = document.createElement('div');
-        label.className = 'bar-label';
-        label.id = `label-${idx}`;
-        label.innerText = val;
-
-        wrapper.appendChild(bar);
-        wrapper.appendChild(label);
-        container.appendChild(wrapper);
+        wrapper.innerHTML = `
+            <div class="bar" id="${state.id}-bar-${idx}" style="height: ${(val / maxVal) * 100}%"></div>
+            <div class="bar-label" id="${state.id}-label-${idx}">${val}</div>
+        `;
+        state.container.appendChild(wrapper);
     });
 }
 
+function resetStats(state) {
+    state.comparisons = 0;
+    state.updates = 0;
+    state.currentFrameIndex = 0;
+    state.compDisplay.innerText = "0";
+    state.swapDisplay.innerText = "0";
+    state.statusDisplay.innerText = "Ожидание";
+    state.container.querySelectorAll('.bar').forEach(b => b.style.backgroundColor = '');
+}
 
-// АНИМАЦИЯ И ЦВЕТА
+// --- ЛОГИКА СОРТИРОВКИ ---
+async function startSorting(state) {
+    if (state.isSorting || state.frames.length === 0) return;
+    state.isSorting = true;
+    updateControls();
 
-async function wait() {
-    if (stepModeCheck.checked) {
-        statusDisplay.innerText = "Пауза (Шаг)";
-        return new Promise(resolve => {
-            stepResolver = resolve;
-        }).then(() => {
-            statusDisplay.innerText = "Сортировка...";
+    while (state.currentFrameIndex < state.frames.length) {
+        const frame = state.frames[state.currentFrameIndex];
+
+        if (frame.type === "update") {
+            playFrame(state, frame);
+            let nextIdx = state.currentFrameIndex + 1;
+            if (nextIdx < state.frames.length && state.frames[nextIdx].type === "update") {
+                state.currentFrameIndex++;
+                playFrame(state, state.frames[state.currentFrameIndex]);
+            }
+        } else {
+            playFrame(state, frame);
+        }
+
+        state.currentFrameIndex++;
+        if (state.currentFrameIndex < state.frames.length) await wait(state);
+    }
+
+    state.statusDisplay.innerText = "Готово!";
+    state.isSorting = false;
+    updateControls();
+}
+
+function playFrame(state, frame) {
+    if (frame.type === "compare") {
+        state.container.querySelectorAll('.bar').forEach(b => b.style.backgroundColor = '');
+        state.statusDisplay.innerText = "Сравнение...";
+        state.comparisons++;
+        state.compDisplay.innerText = state.comparisons;
+        frame.indexes.forEach(idx => {
+            const bar = document.getElementById(`${state.id}-bar-${idx}`);
+            if (bar) bar.style.backgroundColor = "#ff4757";
         });
-    } else {
-        // Значение слайдера: 10 (быстро) -> 1000 (медленно)
-        const ms = parseInt(speedInput.value);
-        return new Promise(resolve => setTimeout(resolve, ms));
+    } else if (frame.type === "update") {
+        state.statusDisplay.innerText = "Перестановка...";
+        state.updates++;
+        state.swapDisplay.innerText = Math.floor(state.updates / 2);
+        state.array[frame.index] = frame.value;
+        
+        const bar = document.getElementById(`${state.id}-bar-${frame.index}`);
+        const label = document.getElementById(`${state.id}-label-${frame.index}`);
+        const maxVal = Math.max(...state.array, 10);
+        
+        if (bar) {
+            bar.style.height = `${(frame.value / maxVal) * 100}%`;
+            bar.style.backgroundColor = "#d5ae2e";
+        }
+        if (label) label.innerText = frame.value;
     }
 }
 
+async function wait(state) {
+    if (stepModeCheck.checked) {
+        state.statusDisplay.innerText = "Пауза (шаг)";
+        return new Promise(resolve => { stepResolver = resolve; });
+    } else {
+        let delay = Math.max(5, parseInt(speedInput.value));
+        return new Promise(resolve => setTimeout(resolve, delay));
+    }
+}
 
-// загрузка JSON-файла
-fetch("data.json")
-    .then(res => res.json())
-    .then(json => {
-        arr = loadArrayFromJson(json);
-        frames = json.frames;
-        i = 0;                  // сброс шага
-        renderBarsFromArray(arr);
-    })
-    .catch(err => console.error("Ошибка загрузки JSON:", err));
+function updateControls() {
+    const isAnySorting = state1.isSorting || state2.isSorting;
+    const controls = [sizeInput, generateBtn, fillMode, startBtn, algoSelect, algoSelect2];
+    controls.forEach(el => el.disabled = isAnySorting);
+    startBtn.style.opacity = isAnySorting ? "0.5" : "1";
+    nextStepBtn.disabled = !isAnySorting;
+}
 
-document.getElementById("next-step-btns").addEventListener("click", playNextFrame);
+// --- СОБЫТИЯ ---
+startBtn.onclick = () => {
+    startSorting(state1);
+    if (wrapper.classList.contains('split-mode')) {
+        startSorting(state2);
+    }
+};
+
+generateBtn.onclick = () => {
+    generateArray1();
+    if (wrapper.classList.contains('split-mode')) generateArray2();
+};
+
+algoSelect.onchange = () => updateAlgoInfo(state1, algoSelect, complexityDisplay);
+algoSelect2.onchange = () => updateAlgoInfo(state2, algoSelect2, complexityDisplay2);
+
+nextStepBtn.onclick = () => {
+    if (stepResolver) {
+        stepResolver();
+        stepResolver = null;
+    }
+};
+
+toggleBtn.addEventListener('click', () => {
+    const isSplit = wrapper.classList.contains('split-mode');
+
+    if (!isSplit) {
+        // ВКЛЮЧАЕМ РАЗДЕЛЕНИЕ
+        wrapper.classList.remove('single-mode');
+        wrapper.classList.add('split-mode');
+        panel2.style.display = 'grid';
+        wrapper.style.display = 'flex';
+        settings2.style.display = 'block';
+        toggleBtn.innerText = 'Объединить окна';
+        toggleBtn.style.backgroundColor = 'var(--color-swap)'; // Опционально: меняем цвет
+        
+        // Инициализируем данные для второго окна
+        generateArray('view2'); 
+    } else {
+        // ВЫКЛЮЧАЕМ РАЗДЕЛЕНИЕ
+        wrapper.classList.remove('split-mode');
+        wrapper.classList.add('single-mode');
+        wrapper.style.display = 'none';
+        panel2.style.display = 'none';
+        settings2.style.display = 'none';
+        toggleBtn.innerText = 'Разделить окно';
+        toggleBtn.style.backgroundColor = 'var(--color-bar)';
+    }
+});

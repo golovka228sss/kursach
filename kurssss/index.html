@@ -18,11 +18,17 @@
             <div class="control-group">
                 <div class="control-label">Алгоритм</div>
                 <select id="algo-select">
-                    <option value="bubble">Пузырьковая (Bubble)</option>
-                    <option value="insertion">Вставками (Insertion)</option>
-                    <option value="selection">Выбором (Selection)</option>
                 </select>
             </div>
+            
+            <!-- Настройки для второго алгоритма (изначально скрыты) -->
+            <div id="settings-view-2" style="display: none;">
+                <div class="control-label">Алгоритм 2 (Справа)</div>
+                <select id="algo-select-2"></select>
+            </div>
+            
+            
+
 
             <!-- 2. Заполнение -->
             <div class="control-group">
@@ -64,8 +70,14 @@
 
                 <div class="control-label" style="margin-top:15px;">Скорость</div>
                 <!-- Инверсия: слева быстро (мало мс), справа медленно -->
-                <input type="range" id="speed" min="10" max="1000" value="200" style="direction: rtl">
+                <input type="range" id="speed" min="0" max="1000" value="800" style="direction: rtl">
             </div>
+            <!-- Внутри <aside class="sidebar"> -->
+            <div class="control-group">
+                <button class="primary" id="toggle-split">Разделить окно</button>
+            </div>
+            
+            
         </aside>
 
         <!-- ОСНОВНОЙ ЭКРАН -->
@@ -88,13 +100,41 @@
                     <h4>Статус</h4>
                     <span id="status-display">Ожидание</span>
                 </div>
+                
             </div>
+            
 
+            
+            
             <!-- Визуализация -->
-            <div class="vis-container" id="container">
+            <div class="vis-container1" id="container">
                 <!-- Блоки будут здесь -->
             </div>
-
+            
+            <div id="vis-container2" class="single-mode">
+               
+            </div>
+            <div class="stats-bar2" id="panel-2" style="display: none;">
+                <!-- Дубликат структуры статистики и контейнер #container-2 -->
+                <div class="stat-item">
+                    <h4>Сложность</h4>
+                    <span id="complexity-display">O(N²)</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Сравнений</h4>
+                    <span id="comparisons-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Перестановок</h4>
+                    <span id="swaps-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <h4>Статус</h4>
+                    <span id="status-display">Ожидание</span>
+                </div>
+                
+                
+            </div>
             <!-- Кнопки управления -->
             <div class="footer-controls">
                 <button class="control-btn" id="next-step-btn" title="Сделать шаг" disabled>⏭</button>
